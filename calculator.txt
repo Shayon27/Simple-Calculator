@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Web Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom glassmorphism and animations */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+        
+        .calculator-shadow {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-press {
+            transition: all 0.1s ease;
+        }
+        
+        .btn-press:active {
+            transform: scale(0.95);
+        }
+
+        /* Hide scrollbar for display */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="h-screen w-full flex items-center justify-center text-white overflow-hidden">
+
+    <!-- Main Container -->
+    <div class="relative z-10 bg-slate-800 p-6 rounded-3xl calculator-shadow w-full max-w-xs sm:max-w-sm border border-slate-700">
+        
+        <!-- Header / Theme Toggle (Visual only for this demo) -->
+        <div class="flex justify-between items-center mb-4 text-slate-400 text-xs font-medium tracking-wider">
+            <span>CASIO-WEB</span>
+            <div class="flex gap-2">
+                <i class="fas fa-sun hover:text-yellow-400 cursor-pointer transition-colors"></i>
+                <i class="fas fa-moon text-white"></i>
+            </div>
+        </div>
+
+        <!-- Display Screen -->
+        <div class="bg-slate-900 rounded-2xl p-4 mb-6 text-right flex flex-col justify-end h-28 border border-slate-700">
+            <!-- Previous Operand / History -->
+            <div id="history-display" class="text-slate-400 text-sm h-6 overflow-hidden"></div>
+            <!-- Current Operand -->
+            <div id="current-display" class="text-4xl font-bold text-white overflow-x-auto no-scrollbar whitespace-nowrap">0</div>
+        </div>
+
+        <!-- Keypad Grid -->
+        <div class="grid grid-cols-4 gap-3">
+            
+            <!-- Row 1 -->
+            <button class="btn-press p-4 rounded-xl bg-slate-700 text-red-400 font-bold hover:bg-slate-600" onclick="clearDisplay()">AC</button>
+            <button class="btn-press p-4 rounded-xl bg-slate-700 text-cyan-400 font-bold hover:bg-slate-600" onclick="deleteLast()"><i class="fas fa-backspace"></i></button>
+            <button class="btn-press p-4 rounded-xl bg-slate-700 text-cyan-400 font-bold hover:bg-slate-600" onclick="appendOperator('%')">%</button>
+            <button class="btn-press p-4 rounded-xl bg-slate-700 text-cyan-400 font-bold hover:bg-slate-600" onclick="appendOperator('/')">÷</button>
+
+            <!-- Row 2 -->
+            <button class="btn-press p-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-xl" onclick="appendNumber('7')">7</button>
+            <button class="btn-press p-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-xl" onclick="appendNumber('8')">8</button>
+            <button class="btn-press p-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-xl" onclick="appendNumber('9')">9</button>
+            <button class="btn-press p-4 rounded-xl bg-slate-700 text-cyan-400 font-bold hover:bg-slate-600" onclick="appendOperator('*')">×</button>
+
+            <!-- Row 3 -->
+            <button class="btn-press p-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-xl" onclick="appendNumber('4')">4</button>
+            <button class="btn-press p-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-xl" onclick="appendNumber('5')">5</button>
+            <button class="btn-press p-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-xl" onclick="appendNumber('6')">6</button>
+            <button class="btn-press p-4 rounded-xl bg-slate-700 text-cyan-400 font-bold hover:bg-slate-600" onclick="appendOperator('-')">−</button>
+
+            <!-- Row 4 -->
+            <button class="btn-press p-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-xl" onclick="appendNumber('1')">1</button>
+            <button class="btn-press p-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-xl" onclick="appendNumber('2')">2</button>
+            <button class="btn-press p-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-xl" onclick="appendNumber('3')">3</button>
+            <button class="btn-press p-4 rounded-xl bg-slate-700 text-cyan-400 font-bold hover:bg-slate-600" onclick="appendOperator('+')">+</button>
+
+            <!-- Row 5 -->
+            <button class="btn-press p-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-xl col-span-2" onclick="appendNumber('0')">0</button>
+            <button class="btn-press p-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-xl" onclick="appendDot()">.</button>
+            <button class="btn-press p-4 rounded-xl bg-cyan-500 text-white font-bold hover:bg-cyan-400 shadow-lg shadow-cyan-500/30" onclick="calculateResult()">=</button>
+        </div>
+    </div>
+
+    <!-- Background decorative elements -->
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div class="absolute top-10 left-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div class="absolute top-10 right-10 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+    </div>
+
+    <script>
+        // Calculator Logic
+        let currentOperand = '';
+        let previousOperand = '';
+        let operation = undefined;
+
+        const currentDisplayElement = document.getElementById('current-display');
+        const historyDisplayElement = document.getElementById('history-display');
+
+        // Update the UI
+        function updateDisplay() {
+            currentDisplayElement.innerText = getDisplayNumber(currentOperand);
+            if (operation != null) {
+                historyDisplayElement.innerText = `${getDisplayNumber(previousOperand)} ${operation}`;
+            } else {
+                historyDisplayElement.innerText = '';
+            }
+        }
+
+        // Helper to format numbers (add commas)
+        function getDisplayNumber(number) {
+            const stringNumber = number.toString();
+            const integerDigits = parseFloat(stringNumber.split('.')[0]);
+            const decimalDigits = stringNumber.split('.')[1];
+            let integerDisplay;
+            if (isNaN(integerDigits)) {
+                integerDisplay = '0';
+            } else {
+                integerDisplay = integerDigits.toLocaleString('en', { maximumFractionDigits: 0 });
+            }
+            if (decimalDigits != null) {
+                return `${integerDisplay}.${decimalDigits}`;
+            } else {
+                // If it's just empty string, show 0 unless we are typing
+                if (number === '') return '0';
+                return integerDisplay;
+            }
+        }
+
+        // Append a number
+        function appendNumber(number) {
+            if (number === '0' && currentOperand === '0') return;
+            // If we just finished a calculation, start fresh
+            if (previousOperand === '' && operation === undefined && currentOperand !== '' && typeof currentOperand === 'number') {
+                currentOperand = number;
+            } else {
+                 if (currentOperand.toString() === '0' && number !== '0') {
+                     currentOperand = number;
+                 } else {
+                     currentOperand = currentOperand.toString() + number.toString();
+                 }
+            }
+            updateDisplay();
+        }
+
+        // Append a dot
+        function appendDot() {
+            if (currentOperand.toString().includes('.')) return;
+            if (currentOperand === '') currentOperand = '0';
+            currentOperand = currentOperand.toString() + '.';
+            updateDisplay();
+        }
+
+        // Choose an operation
+        function appendOperator(op) {
+            if (currentOperand === '') return;
+            if (previousOperand !== '') {
+                compute();
+            }
+            operation = op;
+            previousOperand = currentOperand;
+            currentOperand = '';
+            updateDisplay();
+        }
+
+        // Compute the result
+        function compute() {
+            let computation;
+            const prev = parseFloat(previousOperand);
+            const current = parseFloat(currentOperand);
+            if (isNaN(prev) || isNaN(current)) return;
+            
+            switch (operation) {
+                case '+':
+                    computation = prev + current;
+                    break;
+                case '-':
+                    computation = prev - current;
+                    break;
+                case '*':
+                    computation = prev * current;
+                    break;
+                case '/':
+                    if (current === 0) {
+                        alert("Error: Division by Zero"); // Fallback, better to show on screen
+                        currentOperand = '';
+                        previousOperand = '';
+                        operation = undefined;
+                        updateDisplay();
+                        currentDisplayElement.innerText = "Error";
+                        return;
+                    }
+                    computation = prev / current;
+                    break;
+                case '%':
+                    computation = prev % current;
+                    break;
+                default:
+                    return;
+            }
+            
+            // Handle floating point precision errors
+            computation = Math.round(computation * 100000000) / 100000000;
+            
+            currentOperand = computation;
+            operation = undefined;
+            previousOperand = '';
+            updateDisplay();
+        }
+
+        // Calculate button click
+        function calculateResult() {
+            compute();
+            updateDisplay();
+        }
+
+        // Clear All
+        function clearDisplay() {
+            currentOperand = '';
+            previousOperand = '';
+            operation = undefined;
+            updateDisplay();
+        }
+
+        // Delete last digit
+        function deleteLast() {
+            currentOperand = currentOperand.toString().slice(0, -1);
+            if (currentOperand === '') currentOperand = ''; // Handle empty
+            updateDisplay();
+        }
+
+        // Keyboard Support
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') {
+                appendNumber(e.key);
+            } else if (e.key === '.') {
+                appendDot();
+            } else if (e.key === '=' || e.key === 'Enter') {
+                e.preventDefault(); // Prevent form submission if inside form
+                calculateResult();
+            } else if (e.key === 'Backspace') {
+                deleteLast();
+            } else if (e.key === 'Escape') {
+                clearDisplay();
+            } else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+                appendOperator(e.key);
+            } else if (e.key === '%') {
+                appendOperator('%');
+            }
+        });
+
+        // Initialize
+        updateDisplay();
+
+    </script>
+</body>
+</html>
